@@ -111,6 +111,8 @@ self-reported pro-environmental behavior. Two studies:
     attitudinal replication.
 - All Study 2 files land in `data/` and are therefore git-ignored;
   `scripts/convert-issp.R` is the only tracked addition.
+- Close-out: refreshed `README.md` for the Study 2 files and
+  `scripts/convert-issp.R`; committed and pushed.
 
 ---
 
