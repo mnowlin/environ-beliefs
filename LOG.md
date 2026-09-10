@@ -76,6 +76,42 @@ self-reported pro-environmental behavior. Two studies:
 - **Render check:** `quarto render` produces HTML, PDF (LuaLaTeX), and DOCX
   cleanly.
 
+### Session 2 — 2026-09-10 (Bring in ISSP 2020 data for Study 2; question crosswalk)
+
+- Added `scripts/convert-issp.R`: reads the ISSP 2020 Environment SPSS file
+  (`ZA7650_v2-0-0.sav`, kept outside the repo in `03-data/`), `zap_missing()`
+  + `zap_labels()`, and writes:
+  - `data/issp_environment_2020.csv` — 44,100 respondents × 337 variables,
+    28 countries (US `country == 840`, *n* = 1,847). ISSP reserved codes
+    (−9/−8/−7/−4/−1) collapsed to `NA`; raw `.sav` keeps them distinct.
+  - `data/issp_environment_2020_codebook.csv` — `variable, label` for all 337.
+- Copied the ISSP source questionnaire to
+  `data/ISSP_ZA7650_questionnaire.pdf`.
+- Wrote `data/issp-2017-crosswalk.md`: item-level map from the Study 1
+  belief/behavior measures to ISSP 2020 items, each rated Strong / Moderate /
+  Weak / None, with both questionnaires' wording quoted and the recoding
+  needed to align response-scale direction (ISSP agree items run 1 = agree
+  strongly … 5 = disagree strongly, opposite to the scored 2017 NEP/CNS).
+  Headline findings:
+  - **Behaviors** map reasonably: recycle→`v52`, give money→`v56`,
+    petition→`v55` (Strong); avoid products→`v53`, group membership→`v54`
+    (Moderate). 6 of the 13 Gallup items have usable ISSP equivalents;
+    contacting officials/business, env-motivated voting, and water/energy
+    saving do not.
+  - **NEP** has no ISSP scale but Q10/Q12 items cover the same facets
+    (`v34` ≈ "crisis exaggerated", `v20` ≈ "science will solve it").
+  - **CNS** — essentially no ISSP equivalent (only `v46` "enjoy being outside
+    in nature" as a thin proxy). Largest gap.
+  - **Cultural cognition** — only a 2-item economic-individualism proxy
+    (`v3`, `v4`); the egalitarian–hierarchical scale has no ISSP analog.
+  - **Environmentalist / movement identity** — gap. Ideology → `PARTY_LR`
+    (left–right from vote choice; ~44% missing pooled).
+  - Section 7 gives a recommended ISSP node set for the Study 2 network and
+    the full gap list. Study 2 is best framed as a partial, mostly
+    attitudinal replication.
+- All Study 2 files land in `data/` and are therefore git-ignored;
+  `scripts/convert-issp.R` is the only tracked addition.
+
 ---
 
 ## Analysis Architecture (as of Session 1)
@@ -122,7 +158,10 @@ The two qgraph network figures are drawn in code chunks in the qmd
 
 ## Open Items / To Do
 
-- **Study 2 (ISSP 2020)** is not yet in the repo — no data, no code.
+- **Study 2 (ISSP 2020)**: data + questionnaire + a Study 1↔ISSP question
+  crosswalk are in `data/` (git-ignored); conversion is `scripts/convert-issp.R`.
+  Still to do: pick the final ISSP node set, build the Study 2 network(s),
+  and decide US-only vs. pooled/cross-national. No manuscript prose yet.
 - The manuscript prose sections `# Introduction`, `# Explaining
   Pro-Environmental Behavior`, `# Belief System Networks`, `# Belief System
   Network Analysis`, and `# Results` are still empty headers.
