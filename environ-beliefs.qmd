@@ -1,0 +1,124 @@
+---
+title: "Environmental Belief System Networks and Pro-Environmental Behavior"
+bibliography: references.bib
+csl: american-political-science-association.csl
+fig-cap-location: top
+fontfamily: ebgaramond
+link-bibliography: false
+format:
+  html:
+    author:
+      - name: Matthew C. Nowlin
+        email: matthew.nowlin@uta.edu
+        corresponding: true
+        affiliations:
+          - name: University of Texas at Arlington
+            department: Department of Political Science
+  pdf:
+    author:
+      - name: "Matthew C. Nowlin^[Associate Professor, Department of Political Science, University of Texas at Arlington. Email: matthew.nowlin@uta.edu]"
+    include-in-header:
+      text: |
+        \usepackage{setspace}
+        \usepackage{dcolumn}
+        \usepackage{float}
+        \usepackage{amsmath}
+        \usepackage{ulem}
+        \addtokomafont{disposition}{\rmfamily}
+        \normalem
+  docx:
+    author:
+      - name: "Matthew C. Nowlin^[Associate Professor, Department of Political Science, University of Texas at Arlington. Email: matthew.nowlin@uta.edu]"
+    reference-doc: custom-reference-doc.docx
+---
+
+```{r}
+#| include: false
+source("scripts/analysis.R")
+```
+
+# Introduction
+
+
+# Explaining Pro-Environmental Behavior
+
+
+# Belief System Networks
+
+
+# Data and Measures
+
+To examine the relationship between cultural cognition, environmental orientations, and behavior we draw on a sample of 501 adults living in the US purchased through Survey Sampling Inc. The survey was administered online in July 2017.  The sample size was determined by cost considerations. IRB approval for the survey was approved by [redacted for blind review] Human Subjects Committee on April 3, 2017, protocol number 37-17-0256. Our analysis was not pre-registered.
+
+## Measures
+
+Our dependent variable is pro-environmental behaviors, and we use a 13-item scale from the 2000 Gallup Earth Day Poll. Respondents were asked, "Which of these, if any, have you, yourself, done in the past year?" Possible responses included, "Yes, have done; No, have not done; No opinion", and yes responses were coded as a 1 and no and no opinion were coded as 0.
+
+The behaviors were:
+(1)	Avoided using certain products that harm the environment.
+(2)	Been active in a group or organization that works to protect the environment.
+(3)	Voted for or worked for candidates because of their position on environmental issues.
+(4)	Contributed money to an environmental, conservation or wildlife preservation group.
+(5)	Contacted a public official about an environmental issue.
+(6)	Contacted a business to complain about its products or policies because they harm the environment.
+(7)	Signed a petition supporting an environmental group or some environmental protection effort.
+(8)	Attended a meeting concerning the environment.
+(9)	Tried to use less water in your household.
+(10)	Bought some product specifically because you thought it was better for the environment than competing products.
+(11)	Voluntarily recycled newspapers, glass, aluminum, motor oil or other items.
+(12)	Reduced your household’s use of energy.
+(13)	Bought or sold stocks based on the environmental record of the companies.
+
+For the purposes of analysis, we use a composite measure that uses all 13 items as well as measures of private environmental behaviors (such as recycling) and public environmental behaviors (such as attending a public meeting about the environment). The Cronbach’s α for the 13-item composite measure is 0.79, for the subset of private behaviors it is 0.75, and for the subset of public behaviors, it is 0.76. All three versions of the measure can be considered reasonably reliable.
+
+
+As noted, we have two measures of environmental orientations including the Connectedness to Nature Scale (CNS) and the New Ecological Paradigm (NEP). The CNS was measured based on agreement with a 1 - strongly disagree to 5 - strongly agree scale with 14 statements such as, I often feel a sense of oneness with the natural world around me and I have a deep understanding of how my actions affect the natural world. The Cronbach’s α for the CNS is 0.81. Similar to the CNS, the NEP scale is based on agreement on a 1 to 5 scale with several statements including We are approaching the limit of the number of people the earth can support and The balance of nature is very delicate and easily upset. The Cronbach’s α for the NEP is 0.82. Table 1 shows the summary statistics and correlations for each of the scales.
+
+
+# Belief System Network Analysis
+
+
+# Results
+
+## Environmental Belief System Network
+
+```{r}
+#| label: fig-envNetwork
+#| fig-cap: Environmental Belief System Network
+#| message: false
+#| warning: false
+#| results: asis
+
+plot(envNetNetwork, layout = "spring", groups = envNetGroups,
+     negDashed = TRUE, legend = FALSE, label.cex = .8, label.scale = TRUE,
+     details = FALSE, theme = "gray")
+```
+
+## Environmental Belief System Network with Behavior
+
+```{r}
+#| label: fig-combineNetwork2
+#| fig-cap: Environmental Belief System Network with Behavior
+#| message: false
+#| warning: false
+#| results: asis
+
+plot(envBNetNetwork, layout = "spring", groups = envBNetGroups,
+     negDashed = TRUE, legend = FALSE, label.cex = .8, label.scale = TRUE,
+     details = FALSE, theme = "gray")
+```
+
+
+\newpage
+
+# Appendix
+
+```{=latex}
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+```
+
+
+\newpage
+
+# References

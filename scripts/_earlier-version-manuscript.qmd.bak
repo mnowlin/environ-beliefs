@@ -1,0 +1,503 @@
+---
+title: "Environmental Belief Systems and Pro-Environmental Behavior"
+author: ""
+bibliography: /Users/matthewnowlin/Library/CloudStorage/Dropbox/refs.bib
+csl: /Users/matthewnowlin/Library/CloudStorage/Dropbox/Projects/Manuscript-Files/csl/american-political-science-association.csl
+fig-cap-location: top
+fontfamily: ebgaramond
+link-bibliography: false
+format: 
+  pdf:
+    include-in-header: 
+      text: |
+        \usepackage{setspace}
+        \usepackage{dcolumn}
+        \usepackage{float}
+        \usepackage{amsmath}
+        \usepackage{float}
+        \addtokomafont{disposition}{\rmfamily}
+  docx:
+    reference-doc: /Users/matthewnowlin/Library/CloudStorage/Dropbox/Projects/Manuscript-Files/reference.docx 
+---
+
+```{r setup}
+#| echo: false
+#| include: false
+#| warning: false
+
+# setup project 
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+setwd("/Users/matthewnowlin/Library/CloudStorage/OneDrive-UTArlington/01-IN PROGRESS/Research/environ-beliefs")
+
+# data
+CCdata <- read.csv("cleandat.csv")
+
+# packages 
+library("tidyverse")
+library("bootnet")
+library("qgraph")
+library("ggplot2")
+library("egg")
+library("car")
+library("ppcor")
+library("modelsummary")
+library("networktools")
+library("NetworkComparisonTest")
+
+
+```
+
+
+# Introduction 
+
+
+# Explaining Pro-Environmental Behavior  
+
+
+# Belief System Networks 
+
+
+# Data and Measures
+```{r}
+#| echo: false
+#| include: false
+#| warning: false
+
+## Cronbach's alpha 
+proEVcompositeA <- psy::cronbach(data.frame(CCdata$product, CCdata$water, CCdata$buycott, CCdata$recycle, CCdata$energy, 
+                                            CCdata$stocks, CCdata$act.org, CCdata$cand, CCdata$money.org, CCdata$cont.off, 
+                                            CCdata$cont.bus, CCdata$petition, CCdata$meeting))
+proEVprivateA <- psy::cronbach(data.frame(CCdata$product, CCdata$water, CCdata$buycott, CCdata$recycle, CCdata$energy))
+proEVpublicA <- psy::cronbach(data.frame(CCdata$act.org, CCdata$cand, CCdata$money.org, CCdata$cont.off, 
+                                            CCdata$cont.bus, CCdata$petition, CCdata$meeting))
+
+nepA <- psy::cronbach(data.frame(CCdata$nep1, CCdata$nep2_r, CCdata$nep3, CCdata$nep4_r, CCdata$nep5, CCdata$nep6_r, CCdata$nep7, 
+                                 CCdata$nep8_r, CCdata$nep9, CCdata$nep10_r, CCdata$nep11, CCdata$nep12_r, CCdata$nep13, 
+                                 CCdata$nep14_r, CCdata$nep15)) 
+
+cnsA <- psy::cronbach(data.frame(CCdata$cns1, CCdata$cns2, CCdata$cns3, CCdata$cns4_r, CCdata$cns5, CCdata$cns6, 
+                                 CCdata$cns7, CCdata$cns8, CCdata$cns9, CCdata$cns10, CCdata$cns11, CCdata$cns12_r, 
+                                 CCdata$cns13, CCdata$cns14_r))
+
+ccciA <- psy::cronbach(data.frame(CCdata$cc_ci_1, CCdata$cc_ci_2, CCdata$cc_ci_3, CCdata$cc_ci_4, CCdata$cc_ci_5,
+                                  CCdata$cc_ci_6, CCdata$cc_ci_7, CCdata$cc_ci_8, CCdata$cc_ci_9, CCdata$cc_ci_11,
+                                  CCdata$cc_ci_12, CCdata$cc_ci_13, CCdata$cc_ci_14 , CCdata$cc_ci_15,
+                                  CCdata$cc_ci_16, CCdata$cc_ci_17)) 
+
+ccehA <- psy::cronbach(data.frame(CCdata$cc_eh_1, CCdata$cc_eh_2, CCdata$cc_eh_3, CCdata$cc_eh_4, CCdata$cc_eh_5,
+                                  CCdata$cc_eh_6, CCdata$cc_eh_7, CCdata$cc_eh_8, CCdata$cc_eh_9, CCdata$cc_eh_10, 
+                                  CCdata$cc_eh_11, CCdata$cc_eh_12, CCdata$cc_eh_13, CCdata$cc_eh_14))
+```
+
+
+To examine the relationship between cultural cognition, environmental orientations, and behavior we draw on a sample of 501 adults living in the US purchased through Survey Sampling Inc. The survey was administered online in July 2017.  The sample size was determined by cost considerations. IRB approval for the survey was approved by [redacted for blind review] Human Subjects Committee on April 3, 2017, protocol number 37-17-0256. Our analysis was not pre-registered.
+
+## Measures 
+
+Our dependent variable is pro-environmental behaviors, and we use a 13-item scale from the 2000 Gallup Earth Day Poll. Respondents were asked, "Which of these, if any, have you, yourself, done in the past year?" Possible responses included, "Yes, have done; No, have not done; No opinion", and yes responses were coded as a 1 and no and no opinion were coded as 0. 
+
+The behaviors were:
+(1)	Avoided using certain products that harm the environment.
+(2)	Been active in a group or organization that works to protect the environment.
+(3)	Voted for or worked for candidates because of their position on environmental issues.
+(4)	Contributed money to an environmental, conservation or wildlife preservation group.
+(5)	Contacted a public official about an environmental issue.
+(6)	Contacted a business to complain about its products or policies because they harm the environment.
+(7)	Signed a petition supporting an environmental group or some environmental protection effort.
+(8)	Attended a meeting concerning the environment.
+(9)	Tried to use less water in your household.
+(10)	Bought some product specifically because you thought it was better for the environment than competing products.
+(11)	Voluntarily recycled newspapers, glass, aluminum, motor oil or other items.
+(12)	Reduced your household’s use of energy.
+(13)	Bought or sold stocks based on the environmental record of the companies.
+
+For the purposes of analysis, we use a composite measure that uses all 13 items as well as measures of private environmental behaviors (such as recycling) and public environmental behaviors (such as attending a public meeting about the environment). The Cronbach’s α for the 13-item composite measure is 0.79, for the subset of private behaviors it is 0.75, and for the subset of public behaviors, it is 0.76. All three versions of the measure can be considered reasonably reliable.
+
+
+As noted, we have two measures of environmental orientations including the Connectedness to Nature Scale (CNS) and the New Ecological Paradigm (NEP). The CNS was measured based on agreement with a 1 - strongly disagree to 5 - strongly agree scale with 14 statements such as, I often feel a sense of oneness with the natural world around me and I have a deep understanding of how my actions affect the natural world. The Cronbach’s α for the CNS is 0.81. Similar to the CNS, the NEP scale is based on agreement on a 1 to 5 scale with several statements including We are approaching the limit of the number of people the earth can support and The balance of nature is very delicate and easily upset. The Cronbach’s α for the NEP is 0.82. Table 1 shows the summary statistics and correlations for each of the scales.
+
+
+# Belief System Network Analysis 
+
+# Results 
+
+## Environmental Belief System Network 
+
+```{r estimate network for environmental beliefs}
+#| echo: false
+#| warning: false
+
+envNetVars <- c("Ideology",
+                "environmentalist", "enviro.move",
+                "cns1","cns2","cns3","cns4_r","cns5","cns6","cns7",
+                "cns8","cns9","cns10","cns11","cns12_r","cns13","cns14_r",
+                "nep1","nep2_r","nep3","nep4_r","nep5","nep6_r","nep7","nep8_r",
+                "nep9","nep10_r","nep11","nep12_r","nep13","nep14_r","nep15"
+                )
+envNetData <- CCdata[envNetVars]
+
+envNetNetwork <- estimateNetwork(envNetData, 
+                                 default = "EBICglasso",
+                                 corMethod = "cor_auto",
+                                 tuning = 0.5)
+
+# summary(envNetNetwork) ##for number of edges and connections
+# partial correlation matrix
+# envNetNetwork$results$optnet
+
+```
+
+```{r plot combine network}
+#| message: false
+#| results: asis
+#| warning: false
+#| echo: false
+#| label: fig-envNetwork
+#| fig-cap: Environmental Belief System Network
+
+groups <- factor(c(
+  rep("Ideology", 1),
+  rep("ENV", 2),
+  rep("CNS", 14), 
+  rep("NEP", 15)
+))
+
+groups <- factor(as.character(groups), levels = c("Ideology","ENV","CNS", "NEP"))
+
+plot(envNetNetwork, layout = "spring", groups=groups, negDashed = T, legend = F, label.cex = .8, label.scale = T, details = F, theme = "gray")
+```
+
+```{r centrality measures for complete network}
+#| echo: false
+#| include: false
+#| warning: false
+
+# set.seed(1287) 
+# net_boot <- bootnet(envNetNetwork, nBoots = 1000,
+#                     default = "EBICglasso",
+#                     statistics = c("betweenness","closeness","strength","edge"),
+#                     type = "nonparametric", nCores = 1)
+
+# save(net_boot, file= paste0(getwd(),"/data/ENVnetwork_data_for_replication.RData"))
+
+load(paste0(getwd(),"/data/ENVnetwork_data_for_replication.RData"))
+
+summary(net_boot)
+
+net_boot_whole <- net_boot$bootTable
+# net_boot_strength <- net_boot_whole %>%
+#  filter(type=="strength") %>%
+#  filter(id == c("US \nrisk","GW \nworry"))
+
+net_boot_stat<-summary(net_boot)
+net_boot_stat_cent <- net_boot_stat %>%
+  filter(type!="edge")
+
+cent_stat <- net_boot_stat_cent %>%
+  dplyr::select(type, id, mean, CIlower, CIupper)
+cent_stat$id
+
+labels2 <- c("Ideology","cns1","cns10","cns11","cns12_r","cns13",
+             "cns14_r","cns2","cns3","cns4_r","cns5","cns6",
+             "cns7","cns8","cns9","enviro.move","environmentalist",
+             "nep1","nep10_r","nep11","nep12_r","nep13","nep14_r",
+             "nep15","nep2_r","nep3","nep4_r","nep5","nep6_r",
+             "nep7","nep8_r","nep9")
+
+cent_stat$labels <- rep(labels2, 3)
+
+str_cent<- cent_stat %>%
+  filter(type == "strength")
+
+str_centP <- ggplot(data = str_cent, aes(x=reorder(labels, mean), y=mean)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin=(CIlower), ymax=(CIupper)), stat = "identity", position=position_dodge(0.1), width=.1) +
+  coord_flip() +
+  xlab("") +
+  ylab("") + 
+  ggtitle("Strength") +
+  theme_minimal() +
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = .3) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(face = "italic"))
+
+close_cent<- cent_stat %>%
+  filter(type == "closeness")
+
+close_centP <- ggplot(data = close_cent, aes(x=reorder(labels, mean), y=mean)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin=(CIlower), ymax=(CIupper)), stat = "identity", position=position_dodge(0.1), width=.1) +
+  coord_flip() +
+  xlab("") +
+  ylab("") + 
+  ggtitle("Closeness") +
+  theme_minimal() +
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = .3) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(face = "italic"))
+
+betw_cent <- cent_stat %>%
+  filter(type == "betweenness")
+
+betw_centP <- ggplot(data = betw_cent, aes(x=reorder(labels, mean), y=mean)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin=(CIlower), ymax=(CIupper)), stat = "identity", position=position_dodge(0.1), width=.1) +
+  coord_flip() +
+  xlab("Beliefs") +
+  ylab("") + 
+  ggtitle("Betweenness") +
+  theme_minimal() +
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = .3) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(face = "italic"))
+
+# ENVcentralPlots <- ggarrange(betw_centP, close_centP, str_centP, ncol=3, nrow=1)
+# ggsave("output/ENVcentralPlots.png", COMcentralPlots, width = 10, height = 4)
+
+
+```
+
+```{r}
+betw_centO <- betw_cent %>% arrange(desc(mean))
+close_centO <- close_cent %>% arrange(desc(mean))
+str_centO <- str_cent %>% arrange(desc(mean))
+
+cent_stat$itemtype[cent_stat$node1=="cns1" |
+                     cent_stat$node1=="cns10" |
+                     cent_stat$node1=="cns11" |
+                     cent_stat$node1=="cns12_r" |
+                     cent_stat$node1=="cns13" |
+                     cent_stat$node1=="cns14_r" |
+                     cent_stat$node1=="cns2" | 
+                     cent_stat$node1=="cns3" |
+                     cent_stat$node1=="cns4_r" |
+                     cent_stat$node1=="cns5" |
+                     cent_stat$node1=="cns6" |
+                     cent_stat$node1=="cns7" |
+                     cent_stat$node1=="cns8" |
+                     cent_stat$node1=="cns9"] <- "CNS"
+
+cent_stat$itemtype[cent_stat$node1=="nep1" |
+                     cent_stat$node1=="nep10_r" |
+                     cent_stat$node1=="nep11" |
+                     cent_stat$node1=="nep12_r" |
+                     cent_stat$node1=="nep13" |
+                     cent_stat$node1=="nep14_r" |
+                     cent_stat$node1=="nep15" |
+                     cent_stat$node1=="nep2_r" |
+                     cent_stat$node1=="nep3" |
+                     cent_stat$node1=="nep4_r" |
+                     cent_stat$node1=="nep5" |
+                     cent_stat$node1=="nep6_r" |
+                     cent_stat$node1=="nep7" |
+                     cent_stat$node1=="nep8_r" |
+                     cent_stat$node1=="nep9"] <- "NEP"
+
+cent_stat$itemtype[cent_stat$node1=="Ideology"]  <- "Ideology"
+
+cent_stat$itemtype[cent_stat$node1=="enviro.move" |
+                     cent_stat$node1=="environmentalist"]  <- "ENV"
+
+cent_stat$measure <- factor(as.character(cent_stat$type), levels = c("betweenness", "closeness", "strength"))
+cent_stat$measure <- plyr::revalue(cent_stat$measure, c("betweenness" = "Betweenness",
+                                                        "closeness" = "Closeness",
+                                                        "strength" = "Strength"))
+cent_stat$itemtype <- factor(as.character(cent_stat$itemtype), levels = c("NEP", "CNS", "Ideology", "ENV"))
+
+centCOMP <- subset(cent_stat, itemtype=="CNS" | itemtype=="NEP")
+
+# differences are not significant
+btwCOMP.t <- t.test(mean ~ itemtype, data = subset(centCOMP, measure == "Betweenness"))
+clsCOMP.t <- t.test(mean ~ itemtype, data = subset(centCOMP, measure == "Closeness"))
+strCOMP.t <- t.test(mean ~ itemtype, data = subset(centCOMP, measure == "Strength"))
+
+# functions for centrality by belief type plot
+ci <- function(x) (sd(x)/sqrt(length(x))*qt(0.975,df=length(x)-1) ) #function to compute size of confidence intervals
+
+data_summary <- function(x) {
+  m <- mean(x)
+  ymin <- m-ci(x)
+  ymax <- m+ci(x)
+  return(c(y=m,ymin=ymin,ymax=ymax))
+}
+
+centP <- ggplot(cent_stat, aes(x = factor(itemtype), y = mean)) +
+  geom_point(size = 2, position=position_jitter(width=.05,height=0), alpha = .5) +
+  facet_wrap(~measure, ncol = 3, scales = "free_y") +
+  stat_summary(fun.data=data_summary, geom = "crossbar", size = .5, width = .3, color = "black")+
+  ylab("Centrality")+
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(face = "italic"),
+        axis.title.x=element_blank())
+
+ggsave("output/centP.png", centP, width = 10, height = 4)
+
+```
+
+
+## Environmental Belief System Network with Behavior
+
+```{r estimate complete network for environmental beliefs + behavior}
+#| echo: false
+#| warning: false
+
+envBNetVars <- c("Ideology",
+                "environmentalist", "enviro.move",
+                "cns1","cns2","cns3","cns4_r","cns5","cns6","cns7",
+                "cns8","cns9","cns10","cns11","cns12_r","cns13","cns14_r",
+                "nep1","nep2_r","nep3","nep4_r","nep5","nep6_r","nep7","nep8_r",
+                "nep9","nep10_r","nep11","nep12_r","nep13","nep14_r","nep15",
+                "public","private")
+envBNetData <- CCdata[envBNetVars]
+
+envBNetNetwork <- estimateNetwork(envBNetData, 
+                                 default = "EBICglasso",
+                                 corMethod = "cor_auto",
+                                 tuning = 0.5)
+
+# summary(envBNetNetwork) ##for number of edges and connections
+# partial correlation matrix
+envBNetNetwork$results$optnet
+
+pubCor <- envBNetNetwork$results$optnet[1:32,33] #public behave correlations 
+privCor <- envBNetNetwork$results$optnet[1:32,34] #private behave correlations 
+
+
+
+```
+
+```{r plot env network + behavior}
+#| message: false
+#| results: asis
+#| warning: false
+#| echo: false
+#| label: fig-combineNetwork2
+#| fig-cap: Environmental Belief System Network with Behavior 
+
+groups <- factor(c(
+  rep("Ideology", 1),
+  rep("ENV", 2),
+  rep("CNS", 14), 
+  rep("NEP", 15),
+  rep("Behavior", 2)
+))
+
+groups <- factor(as.character(groups), levels = c("Ideology","ENV","CNS", "NEP", "Behavior"))
+
+
+plot(envBNetNetwork, layout = "spring", groups=groups, negDashed = T, legend = F, label.cex = .8, label.scale = T, details = F, theme = "gray")
+
+```
+
+```{r centrality measures for network + behavior}
+#| echo: false
+#| include: false
+#| warning: false
+
+# set.seed(1287) 
+# net_boot <- bootnet(envBNetNetwork, nBoots = 1000,
+#                     default = "EBICglasso",
+#                     statistics = c("betweenness","closeness","strength","edge"),
+#                     type = "nonparametric", nCores = 1)
+#save(net_boot, file= paste0(getwd(),"/data/ENVBnetwork_data_for_replication.RData"))
+
+load(paste0(getwd(),"/data/ENVBnetwork_data_for_replication.RData"))
+
+summary(net_boot)
+
+
+net_boot_whole <- net_boot$bootTable
+# net_boot_strength <- net_boot_whole %>%
+#  filter(type=="strength") %>%
+#  filter(id == c("US \nrisk","GW \nworry"))
+
+net_boot_stat<-summary(net_boot)
+net_boot_stat_cent <- net_boot_stat %>%
+  filter(type!="edge")
+
+cent_stat <- net_boot_stat_cent %>%
+  dplyr::select(type, id, mean, CIlower, CIupper)
+cent_stat$id
+
+labels2 <- c("Ideology","cns1","cns10","cns11","cns12_r","cns13",
+             "cns14_r","cns2","cns3","cns4_r","cns5","cns6",
+             "cns7","cns8","cns9","enviro.move","environmentalist",
+             "nep1","nep10_r","nep11","nep12_r","nep13","nep14_r",
+             "nep15","nep2_r","nep3","nep4_r","nep5","nep6_r",
+             "nep7","nep8_r","nep9","private","public")
+
+cent_stat$labels <- rep(labels2, 3)
+
+str_cent<- cent_stat %>%
+  filter(type == "strength")
+
+str_centP <- ggplot(data = str_cent, aes(x=reorder(labels, mean), y=mean)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin=(CIlower), ymax=(CIupper)), stat = "identity", position=position_dodge(0.1), width=.1) +
+  coord_flip() +
+  xlab("") +
+  ylab("") + 
+  ggtitle("Strength") +
+  theme_minimal() +
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = .3) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(face = "italic"))
+
+close_cent<- cent_stat %>%
+  filter(type == "closeness")
+
+close_centP <- ggplot(data = close_cent, aes(x=reorder(labels, mean), y=mean)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin=(CIlower), ymax=(CIupper)), stat = "identity", position=position_dodge(0.1), width=.1) +
+  coord_flip() +
+  xlab("") +
+  ylab("") + 
+  ggtitle("Closeness") +
+  theme_minimal() +
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = .3) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(face = "italic"))
+
+betw_cent <- cent_stat %>%
+  filter(type == "betweenness")
+
+betw_centP <- ggplot(data = betw_cent, aes(x=reorder(labels, mean), y=mean)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin=(CIlower), ymax=(CIupper)), stat = "identity", position=position_dodge(0.1), width=.1) +
+  coord_flip() +
+  xlab("Beliefs") +
+  ylab("") + 
+  ggtitle("Betweenness") +
+  theme_minimal() +
+  geom_vline(xintercept = 0, linetype = "dotted", alpha = .3) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(face = "italic"))
+
+centralPlots <- ggarrange(betw_centP, close_centP, str_centP, ncol=3, nrow=1)
+ggsave("output/ENVBcentralPlots.png", centralPlots, width = 10, height = 4)
+
+```
+
+
+
+
+
+
+\newpage
+
+# Appendix
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+
+
+
+\newpage
+
+# References
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+\vspace*{-0.2in}
+\singlespace
+\noindent

@@ -1,0 +1,23 @@
+# --- project data & local-only material (per CLAUDE.md set-up step 10) ---
+/data
+/literature
+nowlin-style-profile.md
+
+# --- generated at render time by scripts/export-cited-refs.R ---
+references.bib
+american-political-science-association.csl
+
+# --- R / RStudio ---
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+Rplots.pdf
+
+# --- Quarto ---
+/.quarto/
+
+# --- OS ---
+.DS_Store
+
+**/*.quarto_ipynb
