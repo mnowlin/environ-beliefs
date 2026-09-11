@@ -1,0 +1,166 @@
+---
+title: "Supplemental Materials for *Environmental Belief System Networks and Pro-Environmental Behavior*"
+bibliography: references.bib
+csl: american-political-science-association.csl
+fig-cap-location: top
+fontfamily: ebgaramond
+link-bibliography: false
+format:
+  html:
+    author:
+      - name: Matthew C. Nowlin
+        email: matthew.nowlin@uta.edu
+        corresponding: true
+        affiliations:
+          - name: University of Texas at Arlington
+            department: Department of Political Science
+  pdf:
+    author:
+      - name: "Matthew C. Nowlin"
+    include-in-header:
+      text: |
+        \usepackage{setspace}
+        \usepackage{dcolumn}
+        \usepackage{float}
+        \usepackage{amsmath}
+        \usepackage{ulem}
+        \addtokomafont{disposition}{\rmfamily}
+        \normalem
+        \renewcommand{\thetable}{S\arabic{table}}
+        \renewcommand{\thefigure}{S\arabic{figure}}
+  docx:
+    author:
+      - name: "Matthew C. Nowlin"
+    reference-doc: custom-reference-doc.docx
+---
+
+```{r}
+#| include: false
+source("scripts/analysis.R")
+
+issp_dev  <- readRDS("data/issp_scale_dev.rds")
+issp_summ <- read.csv("data/issp_belief_behavior_summary_pubpriv.csv")
+```
+
+# S1. Dimensionality of the Study 1 NEP and CNS scales
+
+I use exploratory graph analysis (EGA) and unique variable analysis (UVA) to check that the New Ecological Paradigm (NEP) and Connectedness to Nature Scale (CNS) items each form a single dimension before the scales enter the belief network. EGA estimates a regularized partial-correlation network over the items and detects communities with the Walktrap algorithm. A bootstrap with 500 resamples assesses the stability of that structure. UVA flags locally redundant item pairs with weighted topological overlap (wTO), using a redundancy threshold of 0.25.
+
+For both scales the EGA solution splits into two communities that separate the forward-worded from the reverse-worded items rather than distinct content facets (@fig-ega; @tbl-ega-stability, @tbl-ega-comm). This is a wording artifact rather than substantive multidimensionality, so I treat each scale as one dimension. UVA flags no item pairs above the 0.25 threshold (@tbl-uva), so I do not drop or combine any items. A single-dimension EGA network score and the unit-weighted item mean correlate above .97 for each scale and relate to the behavior measures almost identically (@tbl-ega-scorecor), so the analysis in the main text uses the item means.
+
+```{r}
+#| label: fig-ega
+#| fig-cap: "Exploratory graph analysis of the NEP and CNS items, separately and jointly. Nodes are items, edges are regularized partial correlations, and node color is the detected Walktrap community. Communities separate forward-worded from reverse-worded items."
+#| fig-height: 8
+#| message: false
+#| warning: false
+
+library(patchwork)
+(ega_plot_nep + ega_plot_cns) / ega_plot_joint
+```
+
+```{r}
+#| label: tbl-ega-stability
+#| tbl-cap: "EGA dimensionality and bootstrap (500 resamples) stability for the NEP and CNS item sets. Structural consistency is reported for each detected community."
+knitr::kable(ega_stability,
+  col.names = c("Scale", "Items", "alpha", "EGA dimensions", "bootEGA median dim",
+                "bootEGA modal dim", "Structural consistency", "Mean item stability"))
+```
+
+```{r}
+#| label: tbl-ega-comm
+#| tbl-cap: "Item-to-community assignment for the per-scale and joint NEP and CNS EGA solutions, with bootstrap item stability, by scale and item keying."
+knitr::kable(ega_comm,
+  col.names = c("Item", "Scale", "Keying", "Community (scale EGA)",
+                "Community (joint EGA)", "Item stability"))
+```
+
+```{r}
+#| label: tbl-uva
+#| tbl-cap: "The five largest weighted topological overlap (wTO) values per scale from unique variable analysis. No pair reaches the wTO = 0.25 redundancy threshold."
+knitr::kable(uva_top_pairs, col.names = c("Scale", "Item i", "Item j", "wTO"))
+```
+
+```{r}
+#| label: tbl-ega-scorecor
+#| tbl-cap: "Correlations among the item mean, the single-dimension EGA network score, the UVA-reduced mean for the NEP, and the public and private behavior measures. Scores are oriented so that higher values indicate more pro-environmental positions."
+knitr::kable(ega_score_cor)
+```
+
+\newpage
+
+# S2. Construction of the Study 2 belief scales
+
+The ISSP environment module does not field the NEP or CNS scales, so I construct comparable belief measures from the module's attitude items. I start from `r nrow(issp_dev$scale_item_table)` items covering concern, climate-change attribution, environment-economy tradeoffs, personal efficacy and commitment, the perceived danger of specific hazards, and enjoyment of nature. I orient every item so that higher values indicate more pro-environmental positions and then use exploratory graph analysis to identify the belief dimensions among them.
+
+I compare candidate groupings with the Total Entropy Fit Index, where lower values indicate better fit (@tbl-issp-struct). The theoretical grouping by survey battery fits worst. A Louvain community solution over the full item pool fits best and recovers `r issp_dev$scale_ega_dims` communities, and dropping items does not improve fit. A bootstrap with 500 resamples recovers this solution in `r sprintf("%.0f", 100 * max(issp_dev$ega_boot_summary$factor_frequency[["Frequency"]]))` percent of samples, and the structural consistency of each community is at least `r sprintf("%.2f", min(issp_dev$ega_boot_summary$structural_consistency))`.
+
+@tbl-issp-comm lists the communities. Two survey batteries, the agree-disagree items about the environment and the economy and the items about personal efficacy and commitment, each split into a pro-environmental cluster and a skeptical cluster along the wording of the items rather than by content. This is the same wording artifact found for the NEP and CNS scales in Study 1. I therefore fold the small pro-environmental cluster into the larger ecological worldview community, which yields four scales. @tbl-issp-scales gives the items and reliability of each scale and @tbl-issp-scalecor the correlations among them and with a left-right ideology measure.
+
+For the behavior side, exploratory graph analysis of the six ISSP behavior items recovers `r issp_dev$behavior_ega_dims` communities that match the public and private distinction used in Study 1. Recycling and product avoidance form one community, and group membership, petitions, donations, and protest form the other.
+
+```{r}
+#| label: tbl-issp-struct
+#| tbl-cap: "Fit of candidate item groupings for the Study 2 belief items (pooled ISSP sample). TEFI is the Total Entropy Fit Index, where lower values indicate better fit."
+knitr::kable(issp_dev$structure_comparison, digits = 1,
+  col.names = c("Grouping", "Dimensions", "TEFI"))
+```
+
+```{r}
+#| label: tbl-issp-comm
+#| tbl-cap: "The five communities recovered by exploratory graph analysis of the Study 2 belief items."
+comm <- data.frame(
+  Community = names(issp_dev$ega_communities),
+  Label = c("Environmental commitment", "Ecological worldview (skeptical wording)",
+            "Growth harms the environment", "Perceived hazard danger", "Nature affinity"),
+  Items = vapply(issp_dev$ega_communities, paste, collapse = ", ", FUN.VALUE = ""),
+  row.names = NULL)
+knitr::kable(comm)
+```
+
+```{r}
+#| label: tbl-issp-scales
+#| tbl-cap: "The four Study 2 belief scales, their items, and reliability (pooled ISSP sample). The two-item growth-harms community is folded into the ecological worldview scale."
+sc <- data.frame(
+  Scale = c("Environmental commitment", "Ecological worldview", "Perceived threat", "Nature affinity"),
+  Name  = names(issp_dev$scale_map_4),
+  Items = vapply(issp_dev$scale_map_4, paste, collapse = ", ", FUN.VALUE = ""),
+  Alpha = sprintf("%.2f", issp_dev$scale_alpha[names(issp_dev$scale_map_4)]),
+  row.names = NULL)
+knitr::kable(sc)
+```
+
+```{r}
+#| label: tbl-issp-scalecor
+#| tbl-cap: "Correlations among the Study 2 belief scales, a left-right ideology measure, and the six behavior items (pooled ISSP sample). Higher values on every measure indicate more pro-environmental positions or more frequent behavior."
+knitr::kable(issp_dev$scale_cor)
+```
+
+\newpage
+
+# S3. Study 2 belief-to-behavior distances by country
+
+@tbl-issp-bycountry reports, for each country, the belief with the shortest mean path to the behavior set and its 95 percent bootstrap interval, along with the proportion of 1,000 resamples in which that belief is the closest. A support value near 1 means the ordering is stable, and a value near one fifth means it is close to a coin flip.
+
+```{r}
+#| label: tbl-issp-bycountry
+#| tbl-cap: "For each ISSP country, the belief with the shortest mean path to the behavior set, its point estimate with a 95 percent bootstrap interval, and the proportion of 1,000 resamples supporting it as the closest belief."
+cts <- sort(setdiff(unique(issp_summ$country), "POOLED"))
+bycountry <- do.call(rbind, lapply(cts, function(cty) {
+  r <- issp_summ[issp_summ$country == cty & issp_summ$rank == 1, ]
+  r <- r[which.max(r$p_closest), ]
+  data.frame(
+    Country = cty,
+    Belief  = r$belief,
+    Distance = sprintf("%.1f [%.1f, %.1f]", r$mean_spl, r$mean_spl_lo, r$mean_spl_hi),
+    Support  = sprintf("%.2f", r$p_closest),
+    check.names = FALSE)
+}))
+knitr::kable(bycountry, row.names = FALSE)
+```
+
+The six-item behavior specification was also run and is available in the replication files. It gives the same cross-country ordering but noisier per-country results, with the closest belief holding in a majority of resamples in 16 of 28 countries rather than 27.
+
+\newpage
+
+# References

@@ -114,16 +114,292 @@ self-reported pro-environmental behavior. Two studies:
 - Close-out: refreshed `README.md` for the Study 2 files and
   `scripts/convert-issp.R`; committed and pushed.
 
+### Session 3 — 2026-09-10 (Drop cultural cognition from Study 1; Study 1 N is 1,000)
+
+- Established that `data/apsa17.csv` / `data/cleandat.csv` have **1,000**
+  rows, not 501. The cultural-cognition batteries (`q1x31_*` → `cc_ci_*`,
+  `cc_eh_*`, "Question Set 1") were a split-ballot (`dumqset1shown`) shown to
+  501 respondents; the other 499 saw an alternative item set
+  (`q101x127_*`). NEP, CNS, environmentalist identity, ideology, and the
+  13 behavior items were asked of all 1,000.
+- Consequence: the belief-system network already excluded cultural-cognition
+  nodes and the cached bootstraps were already estimated on N = 1,000
+  (`env_boot$sampleSize == envB_boot$sampleSize == 1000`). So the network
+  itself does **not** change.
+- `scripts/analysis.R`: removed the now-vestigial `ccciA` / `ccehA` Cronbach
+  computations (they ran on the 501 split-ballot subset and fed nothing);
+  added `n_study1 <- nrow(CCdata)` and a header note on the split ballot.
+  Re-ran: alphas and both bootstrap objects unchanged, N = 1,000.
+- Corrected the "501" figure and the cultural-cognition framing in
+  `README.md` and `data/issp-2017-crosswalk.md` (crosswalk §5c kept as
+  reference only; egal–hier removed from the §7 gap list).
+- **`environ-beliefs.qmd` still needs an author edit**: the Data and Measures
+  paragraph says "cultural cognition … a sample of 501 adults" — the sample
+  is 1,000 and cultural cognition is no longer part of the study.
+
+### Session 4 — 2026-09-10 (Study 2: per-country belief -> behavior networks)
+
+- Added `scripts/analysis-issp.R`: for each of the 28 ISSP countries (+ a
+  pooled reference) estimate an EBICglasso network over individual belief and
+  behavior items (no indices), then compute Dijkstra shortest paths
+  (1/|edge weight|) from every belief node to every behavior node -- the
+  Study 1 method applied to ISSP.
+  - Belief nodes matched to the 2017 constructs: NEP -> `v20`-`v25`,`v34`;
+    CNS -> `v46`,`v47`; environmentalist identity -> `v31` (weak proxy);
+    ideology -> `PARTY_LR`. Movement identity has no ISSP item (omitted).
+  - Behavior nodes: `v52`-`v57` (the six ISSP items with a 2017 Gallup-list
+    analog), kept individual.
+  - Recoding per `data/issp-2017-crosswalk.md` §3; nodes that are
+    (near-)constant or >50% missing in a country are dropped and logged
+    (`PARTY_LR` dropped in 10 countries incl. CN/TW).
+- Outputs (git-ignored): `data/issp_belief_behavior_paths.csv`,
+  `data/issp_belief_behavior_summary.csv`, `data/issp_networks_by_country.rds`,
+  `output/issp/issp_networks_by_country.pdf`, and a write-up in
+  `data/issp-belief-behavior-results.md`.
+- Result: `do_right` (identity/commitment proxy) or `left_right` (ideology)
+  is the belief closest to the behavior set in 17/28 countries; abstract
+  NEP-type worldview items are consistently farthest. Mirrors Study 1 and
+  Brandt et al. Stability/bootstrap CIs not yet done -- flagged in the
+  results doc.
+
+### Session 5 — 2026-09-10 (Study 1 appendix: EGA / UVA of NEP and CNS)
+
+- Added `EGAnet` (renv snapshot updated) and an "APPENDIX" section to
+  `scripts/analysis.R`:
+  - `EGA()` on the 15 NEP items, the 14 CNS items, and both jointly
+    (glasso model, Walktrap communities); `bootEGA()` 500 resamples for
+    structural / item stability, cached to `data/ega_boot_study1.RData`
+    (regeneration code in the script).
+  - `UVA()` redundancy check (wTO, cut-offs 0.25 and 0.20).
+  - `net.scores()` single-dimension EGA network score per scale, sign-aligned
+    and reversed so higher = more pro-environmental; correlation matrix
+    against the raw mean, a UVA-reduced NEP mean, and `public` / `private`.
+- **Finding:** both scales' EGA solutions split into two communities that map
+  onto item *keying* (forward vs reverse-worded), not content facets --
+  a wording/method factor. bootEGA: NEP 2-dim modal in 85% of resamples
+  (structural consistency .75/.78), CNS 2-dim in 68% (.59/.93). UVA flags no
+  pair above wTO 0.25, so nothing is collapsed. EGA network score vs raw mean
+  correlate .99 (NEP) / .97 (CNS) and relate to behavior near-identically.
+  Conclusion: treat NEP and CNS each as one dimension; keep the raw means.
+- `environ-beliefs.qmd`: added "## Appendix A. Dimensionality of the NEP and
+  CNS scales" under `# Appendix` -- `@fig-ega` (3-panel EGA plot),
+  `@tbl-ega-stability`, `@tbl-ega-comm`, `@tbl-uva`, `@tbl-ega-scorecor`,
+  plus connective text (review/expand the prose). Added a `\setcounter{figure}`
+  / `\thefigure` A-prefix line to the existing latex appendix block.
+  Cross-refs resolve; HTML/PDF/DOCX render clean (PDF now 8 pp). Note the
+  A-prefix only takes in the PDF (the latex hack); in HTML/DOCX the appendix
+  items keep continuous numbers -- switch the heading to
+  `# Appendix {.appendix}` if cross-format A-numbering is wanted.
+
+### Session 6 — 2026-09-10 (Study 1: NEP and CNS collapsed to single scale nodes)
+
+- Per decision (motivated by the Session 5 EGA/UVA appendix), the Study 1
+  network now uses **scale scores**, not individual items:
+  - `scripts/analysis.R` builds `nepX_pro` / `cnsX_pro` = `6 - item` for every
+    NEP/CNS item so higher = more pro-environmental, then
+    `CCdata$NEP` / `CCdata$CNS` = the item means (equal to the cleaning
+    script's `6 - mean`). Confirmed: `cor(NEP, public/private)` = .17/.30,
+    `cor(CNS, ...)` = .36/.43 -- all positive.
+  - Node set: `envNetVars` = Ideology, environmentalist, enviro.move, NEP,
+    CNS (5); `envBNetVars` adds public, private (7). Grouping factors and the
+    `fig-envNetwork` / `fig-combineNetwork2` plots updated.
+  - Dropped the item-level CNS-vs-NEP centrality comparison (`btwCOMP.t` etc.,
+    `centP`, `output/centP.png`) -- meaningless with one node per scale.
+  - Bootstrap caches now load-or-generate (`run_bootnet()`); the stale
+    32/34-node `ENV*network_data_for_replication.RData` were deleted and
+    rebuilt for the 5/7-node networks (~30 s each). Also removed the orphaned
+    `COM*network_data_for_replication.RData` and `output/COM*`, `output/centP.png`.
+- Added **RESULTS 3** to `analysis.R`: `belief_behavior_spl` -- weighted
+  shortest-path distance (`qgraph::centrality(...)$ShortestPathLengths`,
+  Dijkstra on 1/|edge weight|) from each belief node to `public` / `private`,
+  plus the direct partial correlations. `environ-beliefs.qmd` gains
+  `### Shortest paths from beliefs to behavior` with `@tbl-spl`.
+- Result (scale-level): environmentalist identity is closest to public
+  behavior (dist 2.75; direct edge r = .36), CNS closest to private (3.84;
+  r = .26), then enviro.move; NEP and ideology are farthest. Same ordering
+  as the earlier item-level exploration, now stable on 5-7 nodes.
+- `renv.lock` updated (EGAnet, patchwork). HTML/PDF/DOCX render clean.
+- Still no bootstrap CIs on the shortest-path distances (a resampling wrapper
+  is the remaining to-do).
+- User trimmed the Study 1 "Data and Measures" prose (dropped the
+  cultural-cognition framing and the "501 adults" sentence; merged headings
+  under `# Study 1`). Built the referenced-but-missing **Table 1**:
+  `descriptives_table` in `analysis.R` (M / SD / min / max + lower-triangle
+  correlations for PEB, public, private, NEP, CNS, ideology, environmentalist
+  identity, movement identity) and a `@tbl-descriptives` chunk after the
+  measures text. NB the Study 1 section now has no sentence stating the
+  sample (N = 1,000, SSI, online, July 2017) -- flag for the author.
+
+### Session 7 — 2026-09-10 (Study 2 belief scales via EGA)
+
+- `scripts/analysis-issp-scales.R`: EGA scale development for Study 2 from the
+  28-item candidate pool in `issp-2017-crosswalk.md` §7 (v15, v17, v20-v25,
+  v26-v29, v30-v36, v37-v43, v46, v47; `PARTY_LR` kept as a single ideology
+  node, not scaled).
+  - Compared groupings by TEFI (lower = better): a-priori batteries -21.0,
+    Walktrap 3-comm -26.2, **Louvain / EGA.fit 5-comm -31.4 (best)**. Every
+    item-drop variant fit worse. `bootEGA` 500 resamples: 5 comms in 95% of
+    resamples, structural consistency >= .95. Q10 and Q12 each split by item
+    keying (same wording artifact as Study 1 NEP/CNS); Q11 and Q13 are
+    unidimensional.
+  - Recommended **4-scale set** (fold the 2-item v22/v25 "limits" community
+    into worldview, mirroring the Study 1 NEP decision), all oriented
+    higher = pro-environmental:
+    `envcom` (v15,v26,v27,v28,v31,v36; alpha .75),
+    `worldview` (v17,v20-v25,v29,v30,v32-v35; .76),
+    `threat` (v37-v43; .80),
+    `nature` (v46,v47; .61 -- thin CNS proxy).
+  - `make_issp_scales(df, map)` helper builds the scales inside any subset.
+    `envcom`/`worldview` relate most to behavior; `PARTY_LR` (after recoding
+    "other"/"invalid" to NA) correlates ~-.22 with the attitude scales
+    (right = less pro-env) but is 47% missing pooled.
+- Outputs (git-ignored): `data/issp_scale_scores_pooled.csv`,
+  `data/issp_ega_boot.RData`, write-up `data/issp-scales.md`; crosswalk §7
+  points to it.
+
+### Session 8 — 2026-09-10 (Rebuild per-country ISSP networks with scale nodes)
+
+- Extracted the scale machinery into `scripts/_issp-scale-defs.R`
+  (`issp_reverse`, `orient_issp`, `issp_scale_map_4/5`, `make_issp_scales`),
+  now sourced by both `analysis-issp-scales.R` and `analysis-issp.R`.
+- Rewrote `scripts/analysis-issp.R`: belief nodes are now the four scale
+  scores (`envcom`, `worldview`, `threat`, `nature`) + `left_right`
+  (`PARTY_LR`); behavior nodes stay the six individual items
+  (`recycle`, `avoid_buy`, `group_member`, `petition`, `donate`, `protest`).
+  Per country: build scales, recode, drop near-constant / >50%-missing nodes,
+  EBICglasso (`cor_auto`, `forcePD = TRUE` -- fixes JP, whose ~1%-yes protest
+  item made the polychoric matrix non-PD), then belief->behavior shortest
+  paths. All 28 countries + POOLED now fit.
+- Result: **`envcom` is the belief closest to the behavior set in 14/28
+  countries** (mean rank 2.14), `worldview` next (2.25), `left_right` 2.44
+  where present; `threat` and `nature` are peripheral (3.46, 3.79). Mirrors
+  Study 1 (commitment/identity node closest) and the earlier item-level ISSP
+  run. `data/issp-belief-behavior-results.md` rewritten for the scale nodes.
+- Same output files as before (overwritten): `issp_belief_behavior_paths.csv`,
+  `issp_belief_behavior_summary.csv`, `issp_networks_by_country.rds`,
+  `output/issp/issp_networks_by_country.pdf`.
+- Still open: bootstrap CIs on the shortest-path distances.
+
+### Session 9 — 2026-09-10 (Study 2: add public/private behavior mode)
+
+- `scripts/analysis-issp.R` now runs **two behavior modes** in one pass, with
+  all outputs suffixed `_items` / `_pubpriv` (the old unsuffixed files were
+  removed):
+  - `items` -- the 6 individual behavior items (as before).
+  - `pubpriv` -- `public` = group_member+petition+donate+protest (0-4 count);
+    `private` = recycle+avoid_buy, each dichotomised to "always/often" = 1
+    (0-2 count). Parallels the Study 1 public/private nodes.
+- Added an **EGA check on the 6 behavior items** (pooled): Louvain and
+  Walktrap both recover the 2/4 split exactly (private = recycle/avoid_buy;
+  public = the other four; TEFI -2.7), confirming the pubpriv grouping.
+- Result: `pubpriv` mode makes **`envcom` closest to behavior in 24/28
+  countries** (mean rank 1.25, vs 14/28 in `items` mode) -- collapsing the
+  behavior side sharpens the commitment node's lead. Pooled: `envcom`->public
+  (3.92) is the shortest path of all. `data/issp-belief-behavior-results.md`
+  rewritten to cover both modes.
+- Still open: bootstrap CIs on the shortest-path distances.
+
+### Session 10 — 2026-09-10 (Study 2 manuscript prose; supplemental-materials file)
+
+- **`environ-beliefs.qmd`**: added draft Study 2 `## Data and Measures` and
+  `## Results` prose (brief, in the author's style -- first person, "likely",
+  "As noted", no section cross-refs, no colons), with inline R and a new
+  `@tbl-issp-results` (mean belief rank across the 28 countries, both behavior
+  modes). Added one sentence to the Study 1 measures pointing to the
+  supplement for the NEP/CNS dimensionality check.
+- **Moved** the entire manuscript Appendix A (Study 1 EGA/UVA -- prose +
+  `fig-ega`, `tbl-ega-*`) into a new **`environ-beliefs-supplement.qmd`** as
+  section S1. The `# Appendix` heading and its latex A-counter block are
+  removed from the main manuscript.
+- New supplement sections: **S2** (construction of the Study 2 belief scales
+  -- TEFI structure comparison, the 5 EGA communities, bootEGA stability, the
+  4 final scales + alpha, scale correlations, and the behavior-item EGA that
+  recovers the public/private split) and **S3** (belief closest to behavior
+  in each country, both modes).
+- `analysis-issp-scales.R` now also runs the 6-item behavior EGA and saves a
+  display bundle `data/issp_scale_dev.rds` for the two qmds.
+- `_quarto.yaml` renders both docs; `export-cited-refs.R` scans both.
+- HTML/PDF/DOCX render clean for the manuscript and the supplement.
+
+### Session 11 — 2026-09-10 (Bootstrap CIs on the shortest-path distances)
+
+- `scripts/_spl-bootstrap.R`: `boot_spl()` -- nonparametric bootstrap
+  (resample respondents with replacement, re-estimate EBICglasso, recompute
+  Dijkstra belief->behavior shortest paths), returning per-pair percentile
+  CIs, per-belief mean-distance CIs, and `closest_freq` (proportion of
+  resamples in which each belief is closest to the behavior set). Parallel
+  over draws via `parallel::mclapply`.
+- **Study 1** (`analysis.R`): 1,000 resamples on `envBNetNetwork`, cached to
+  `data/ENVB_spl_bootstrap.RData`. `tbl-spl` now shows each distance with its
+  95% interval. `environmentalist` is the closest belief to the behavior set
+  in ~96% of resamples; `environmentalist`->public = 2.7 [2.3, 3.5] and
+  `CNS`->private = 3.8 [3.1, 5.2] are clearly separated, the rest overlap.
+- **Study 2** (`analysis-issp.R`): 1,000 resamples per country per mode,
+  checkpointed to `data/issp_spl_boot_<mode>.rds` after each country. The
+  summary CSVs gain `mean_spl_lo/hi` and `p_closest`. The POOLED network
+  (44k respondents, reference only) keeps its point estimate -- bootstrapping
+  it was the bottleneck; `NCORES` capped at 8 (13 oversubscribed and ran ~5x
+  slower).
+- **Study 2 finding:** the country-level ordering is much more stable under
+  the public/private specification -- the rank-1 belief holds in a majority
+  of resamples in 27/28 countries (20 at > 80%) vs only 16/28 (4 at > 80%)
+  for the six-item specification. The cross-country regularity (`envcom`
+  closest on average) is the reliable part.
+- Supplement S3 by-country table carries the bootstrap support per country;
+  the manuscript Study 2 Results and `data/issp-belief-behavior-results.md`
+  updated with the robustness numbers.
+
+### Session 12 — 2026-09-10 (Study 2 = public/private behavior only)
+
+- Per decision, Study 2 in the manuscript and supplement now uses **only the
+  public/private behavior specification**, to match Study 1. The six-item
+  version is retained in `analysis-issp.R` as an unreported robustness variant
+  (`MODES <- c("pubpriv")` by default; add `"items"` to regenerate it).
+- `environ-beliefs.qmd`: Study 2 Data and Measures describes only the
+  public/private indices; Results reports only that specification; Table 3 is
+  now one specification (Belief / Mean rank / Closest in / Bootstrap-supported).
+  `envcom` closest in 24/28 countries, bootstrap-supported in 27/28.
+- `environ-beliefs-supplement.qmd`: S3 by-country table is public/private only
+  (Belief / distance [95% CI] / bootstrap support), with one sentence noting
+  the six-item variant was also run and is noisier.
+- Both documents render clean (HTML/PDF/DOCX).
+
+### Session 13 — 2026-09-10 (Study 2: illustrative country-network figure)
+
+- `environ-beliefs.qmd`: added **Figure 3**, a 2x2 panel of the pubpriv belief
+  networks for four countries chosen to span the range -- CH (typical,
+  `envcom` closest, p = 1.00), US (near three-way tie, p_closest .47/.28/.25),
+  IN (`nature` closest, p = .98), AU (`left_right` closest, p = .53). Reads
+  the fitted networks from `data/issp_networks_by_country_pubpriv.rds` and
+  plots each with `qgraph` (belief nodes blue, behavior nodes orange). Two
+  sentences of Results prose introduce it.
+- Manuscript display items: Fig 1-2 (Study 1 networks), Fig 3 (Study 2
+  countries); Table 1 (descriptives), Table 2 (Study 1 shortest paths),
+  Table 3 (Study 2 mean ranks).
+- Recolored the Study 1 network figures (`fig-envNetwork`,
+  `fig-combineNetwork2`) to match Fig 3 -- belief nodes blue
+  (`#9ecae1`), behavior nodes orange (`#fdae6b`), `theme = "classic"` edges
+  (green positive / red-dashed negative). `analysis.R` `node_group()` is now
+  a belief/behavior binary factor and exports `net_fig_cols`; all three
+  network chunks use it. Dropped the old Ideology/Identity/Orientation
+  grouping and `theme = "gray"`.
+
 ---
 
 ## Analysis Architecture (as of Session 1)
 
+> Superseded in part by Sessions 3, 5, 6: cultural cognition is dropped,
+> N = 1,000, and the Study 1 network now uses **NEP/CNS scale-score nodes**
+> (5 belief nodes / 7 with behavior) rather than 32 item nodes. See those
+> session entries and `scripts/analysis.R`.
+
 All Study 1 analysis is centralized in `scripts/analysis.R`, sourced at the
 top of `environ-beliefs.qmd`. The script:
 
-- Loads `data/cleandat.csv`.
+- Loads `data/cleandat.csv` (N = 1,000).
 - Computes Cronbach's α for the behavior composite/private/public scales and
-  for NEP, CNS, CC-CI, CC-EH.
+  for NEP and CNS. (Cultural-cognition α's dropped in Session 3 — split
+  ballot, not used.)
 - Estimates two Gaussian graphical models with `bootnet::estimateNetwork`
   (`default = "EBICglasso"`, `corMethod = "cor_auto"`, `tuning = 0.5`):
   - `envNetNetwork` — 32 belief nodes (ideology, 2 environmentalist-identity
@@ -157,6 +433,10 @@ The two qgraph network figures are drawn in code chunks in the qmd
   betweenness / closeness / strength, pre-computed and cached as `.RData`.
 - **Behavior in the network:** entered as the `public` and `private`
   sub-scale sums (not the 13 individual behavior items) in `envBNetNetwork`.
+- **Cultural cognition excluded (Session 3):** the `cc_ci_*` / `cc_eh_*`
+  batteries were a split-ballot half-sample (501 of 1,000). Dropping them
+  keeps Study 1 at N = 1,000; the network node set (ideology, environmentalist
+  identity, CNS, NEP) never included them.
 
 ## Open Items / To Do
 

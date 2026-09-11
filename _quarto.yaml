@@ -5,6 +5,7 @@ project:
   output-dir: _output
   render:
     - environ-beliefs.qmd
+    - environ-beliefs-supplement.qmd
 
 bibliography: references.bib
 csl: american-political-science-association.csl

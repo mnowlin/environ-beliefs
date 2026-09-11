@@ -21,3 +21,7 @@ Rplots.pdf
 .DS_Store
 
 **/*.quarto_ipynb
+
+# stray Quarto latex intermediate
+/environ-beliefs.tex
+/tmp-pdfcrop-*.pdf

@@ -46,11 +46,9 @@ source("scripts/analysis.R")
 # Belief System Networks
 
 
-# Data and Measures
+# Study 1 
 
-To examine the relationship between cultural cognition, environmental orientations, and behavior we draw on a sample of 501 adults living in the US purchased through Survey Sampling Inc. The survey was administered online in July 2017.  The sample size was determined by cost considerations. IRB approval for the survey was approved by [redacted for blind review] Human Subjects Committee on April 3, 2017, protocol number 37-17-0256. Our analysis was not pre-registered.
-
-## Measures
+## Data and Measures
 
 Our dependent variable is pro-environmental behaviors, and we use a 13-item scale from the 2000 Gallup Earth Day Poll. Respondents were asked, "Which of these, if any, have you, yourself, done in the past year?" Possible responses included, "Yes, have done; No, have not done; No opinion", and yes responses were coded as a 1 and no and no opinion were coded as 0.
 
@@ -72,15 +70,19 @@ The behaviors were:
 For the purposes of analysis, we use a composite measure that uses all 13 items as well as measures of private environmental behaviors (such as recycling) and public environmental behaviors (such as attending a public meeting about the environment). The Cronbach’s α for the 13-item composite measure is 0.79, for the subset of private behaviors it is 0.75, and for the subset of public behaviors, it is 0.76. All three versions of the measure can be considered reasonably reliable.
 
 
-As noted, we have two measures of environmental orientations including the Connectedness to Nature Scale (CNS) and the New Ecological Paradigm (NEP). The CNS was measured based on agreement with a 1 - strongly disagree to 5 - strongly agree scale with 14 statements such as, I often feel a sense of oneness with the natural world around me and I have a deep understanding of how my actions affect the natural world. The Cronbach’s α for the CNS is 0.81. Similar to the CNS, the NEP scale is based on agreement on a 1 to 5 scale with several statements including We are approaching the limit of the number of people the earth can support and The balance of nature is very delicate and easily upset. The Cronbach’s α for the NEP is 0.82. Table 1 shows the summary statistics and correlations for each of the scales.
+As noted, we have two measures of environmental orientations including the Connectedness to Nature Scale (CNS) and the New Ecological Paradigm (NEP). The CNS was measured based on agreement with a 1 - strongly disagree to 5 - strongly agree scale with 14 statements such as, I often feel a sense of oneness with the natural world around me and I have a deep understanding of how my actions affect the natural world. The Cronbach’s α for the CNS is 0.81. Similar to the CNS, the NEP scale is based on agreement on a 1 to 5 scale with several statements including We are approaching the limit of the number of people the earth can support and The balance of nature is very delicate and easily upset. The Cronbach’s α for the NEP is 0.82. Table 1 shows the summary statistics and correlations for each of the scales. Exploratory graph analysis confirms that the NEP and CNS items each form a single dimension, and the belief network is not sensitive to whether the scales are scored as raw item means or as network dimension scores. The supplemental materials report this analysis.
 
+```{r}
+#| label: tbl-descriptives
+#| tbl-cap: "Summary statistics and correlations for the Study 1 variables (N = 1,000). NEP and CNS are item means oriented so that higher = more pro-environmental."
+opts <- options(knitr.kable.NA = "")
+knitr::kable(descriptives_table)
+options(opts)
+```
 
-# Belief System Network Analysis
+## Results
 
-
-# Results
-
-## Environmental Belief System Network
+### Environmental Belief System Network
 
 ```{r}
 #| label: fig-envNetwork
@@ -89,12 +91,12 @@ As noted, we have two measures of environmental orientations including the Conne
 #| warning: false
 #| results: asis
 
-plot(envNetNetwork, layout = "spring", groups = envNetGroups,
+plot(envNetNetwork, layout = "spring", groups = envNetGroups, color = net_fig_cols,
      negDashed = TRUE, legend = FALSE, label.cex = .8, label.scale = TRUE,
-     details = FALSE, theme = "gray")
+     details = FALSE, theme = "classic")
 ```
 
-## Environmental Belief System Network with Behavior
+### Environmental Belief System Network with Behavior
 
 ```{r}
 #| label: fig-combineNetwork2
@@ -103,21 +105,96 @@ plot(envNetNetwork, layout = "spring", groups = envNetGroups,
 #| warning: false
 #| results: asis
 
-plot(envBNetNetwork, layout = "spring", groups = envBNetGroups,
+plot(envBNetNetwork, layout = "spring", groups = envBNetGroups, color = net_fig_cols,
      negDashed = TRUE, legend = FALSE, label.cex = .8, label.scale = TRUE,
-     details = FALSE, theme = "gray")
+     details = FALSE, theme = "classic")
+```
+
+### Shortest paths from beliefs to behavior
+
+```{r}
+#| label: tbl-spl
+#| tbl-cap: "Weighted shortest-path distance (Dijkstra on 1 / |edge weight|) from each belief node to the public and private behavior nodes, with 95 percent bootstrap percentile intervals from 1,000 resamples. Rows ordered by mean distance, and a smaller distance indicates a belief closer to behavior."
+knitr::kable(belief_behavior_spl_display)
 ```
 
 
-\newpage
+# Study 2
 
-# Appendix
+```{r}
+#| include: false
+issp_dev  <- readRDS("data/issp_scale_dev.rds")
+issp_summ <- read.csv("data/issp_belief_behavior_summary_pubpriv.csv")
 
-```{=latex}
-\setcounter{table}{0}
-\renewcommand{\thetable}{A\arabic{table}}
+issp_belief_labels <- c(envcom = "Environmental commitment", worldview = "Ecological worldview",
+                        threat = "Perceived threat", nature = "Nature affinity",
+                        left_right = "Ideology (left-right)")
+
+issp_bel <- issp_summ[issp_summ$country != "POOLED", ]
+issp_mr  <- aggregate(rank ~ belief, issp_bel, mean)
+issp_mr  <- issp_mr[order(issp_mr$rank), ]
+issp_cl  <- table(factor(issp_bel$belief[issp_bel$rank == 1], levels = names(issp_belief_labels)))
+issp_rb  <- table(factor(issp_bel$belief[issp_bel$rank == 1 & issp_bel$p_closest > 0.5],
+                         levels = names(issp_belief_labels)))
+
+issp_rank <- data.frame(
+  Belief                = issp_belief_labels[issp_mr$belief],
+  `Mean rank`           = round(issp_mr$rank, 2),
+  `Closest in`          = as.integer(issp_cl[issp_mr$belief]),
+  `Bootstrap-supported` = as.integer(issp_rb[issp_mr$belief]),
+  check.names = FALSE, row.names = NULL)
+
+n_ctry   <- issp_dev$n_countries
+n_envcom <- as.integer(issp_cl[["envcom"]])
+n_robust <- sum(issp_bel$rank == 1 & issp_bel$p_closest > 0.5, na.rm = TRUE)
 ```
 
+## Data and Measures
+
+For the second study I use data from the 2020 wave of the International Social Survey Programme (ISSP) environment module, which surveyed `r format(issp_dev$n_respondents, big.mark = ",")` respondents across `r n_ctry` countries. The module repeats a set of environmental attitude and behavior items that have been fielded since 1993, and it allows the belief network approach to be examined outside the United States.
+
+The ISSP does not include the NEP or CNS scales, so I construct comparable belief measures from the module's attitude items. Using exploratory graph analysis I identify four belief dimensions and score each as the mean of its items, oriented so that higher values indicate more pro-environmental positions. Environmental commitment combines concern about the environment with willingness to pay higher prices and taxes and a personal norm to act (α = `r sprintf("%.2f", issp_dev$scale_alpha[["envcom"]])`). Ecological worldview captures low environmental and climate-change skepticism and is the closest available analog to the NEP (α = `r sprintf("%.2f", issp_dev$scale_alpha[["worldview"]])`). Perceived threat is the mean of seven items rating the danger posed by specific environmental hazards (α = `r sprintf("%.2f", issp_dev$scale_alpha[["threat"]])`). Nature affinity combines enjoyment of nature with the frequency of outdoor leisure and is a thin analog to the CNS (α = `r sprintf("%.2f", issp_dev$scale_alpha[["nature"]])`). I also include a left-right ideology measure based on the party the respondent reports voting for. The supplemental materials describe the scale construction.
+
+The dependent variable is again pro-environmental behavior, measured with the same public and private distinction used in Study 1. The ISSP asks about six behaviors with a close counterpart in the 2000 Gallup items. Public behavior is a count of four collective actions, membership in an environmental group, signing a petition, donating money, and taking part in a protest. Private behavior is a count of two household actions, recycling and avoiding environmentally harmful products. Exploratory graph analysis of the six items recovers this public-private grouping.
+
+## Results
+
+I estimate a separate belief network for each of the `r n_ctry` countries, following the Study 1 procedure, and compute the shortest path from each belief to the public and private behavior nodes. Figure 3 shows the networks for four countries that span the range of results. In Switzerland, the typical case, environmental commitment is closest to behavior. In the United States the ordering is close to a three-way tie among environmental commitment, ideology, and nature affinity. India and Australia are the two countries where a different belief, nature affinity and ideology respectively, has the shortest path.
+
+Table 3 reports the mean rank of each belief across countries, where a rank of one identifies the belief closest to behavior in a given country. The pattern matches Study 1. Environmental commitment has the shortest mean path to behavior in `r n_envcom` of `r n_ctry` countries, and ecological worldview is next. Perceived threat, nature affinity, and ideology are peripheral. A nonparametric bootstrap with 1,000 resamples per country shows that this ordering is stable. The belief identified as closest holds in a majority of resamples in `r n_robust` of `r n_ctry` countries, so the cross-country regularity is not an artifact of a few unstable networks.
+
+```{r}
+#| label: fig-issp-networks
+#| fig-cap: "Belief networks for four illustrative Study 2 countries. Blue nodes are the belief measures (commit = environmental commitment, world = ecological worldview, threat = perceived threat, nature = nature affinity, L-R = left-right ideology), orange nodes are the public and private behavior indices. Solid edges are positive regularized partial correlations and dashed edges negative, with thicker edges indicating stronger associations."
+#| fig-width: 8
+#| fig-height: 8
+#| message: false
+#| warning: false
+
+issp_nets <- readRDS("data/issp_networks_by_country_pubpriv.rds")
+issp_fig_countries <- c(CH = "Switzerland", US = "United States", IN = "India", AU = "Australia")
+issp_short <- c(envcom = "commit", worldview = "world", threat = "threat",
+                nature = "nature", left_right = "L-R", public = "public", private = "private")
+op <- par(mfrow = c(2, 2))
+for (cc in names(issp_fig_countries)) {
+  g <- issp_nets[[cc]]$net$graph
+  grp <- factor(ifelse(colnames(g) %in% c("public", "private"), "Behavior", "Belief"),
+                levels = c("Belief", "Behavior"))
+  qgraph(g, layout = "spring", labels = issp_short[colnames(g)],
+         groups = grp, color = net_fig_cols, theme = "classic",
+         legend = FALSE, negDashed = TRUE, label.cex = 1.1, label.scale = FALSE,
+         title = sprintf("%s (n = %d)", issp_fig_countries[cc], issp_nets[[cc]]$n))
+}
+par(op)
+```
+
+```{r}
+#| label: tbl-issp-results
+#| tbl-cap: "Mean rank of each Study 2 belief across the 28 ISSP countries (1 = closest to behavior). 'Closest in' counts the countries where the belief has the shortest mean path to behavior, and 'bootstrap-supported' the subset where it holds in a majority of 1,000 resamples."
+knitr::kable(issp_rank, digits = 2)
+```
+
+As noted, the belief that combines concern, willingness to pay, and a personal norm to act sits closest to behavior in both studies, while the more abstract worldview measures are further away. This is likely because beliefs tied to identity and personal commitment are more proximate to action than beliefs about how the natural world works.
 
 \newpage
 
