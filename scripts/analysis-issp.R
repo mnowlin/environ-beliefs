@@ -4,7 +4,8 @@
 ## One EBICglasso network per country (28) plus a pooled reference. Belief nodes
 ## are the four EGA-derived SCALE scores (scripts/analysis-issp-scales.R;
 ## data/issp-scales.md) plus PARTY_LR as a single ideology node -- mirroring the
-## Study 1 move to NEP/CNS scale nodes in scripts/analysis.R.
+## Study 1 move to NEP/CNS scale nodes in scripts/analysis.R -- and two
+## single-item economic-belief nodes, market (v3) and redistribute (v4).
 ##
 ## Behavior mode(s) -- set MODES below (outputs suffixed _items / _pubpriv):
 ##   pubpriv -- Study 1-style indices (the specification reported in the paper):
@@ -25,6 +26,7 @@
 ##   data/issp_belief_behavior_summary_<mode>.csv   country x belief: mean/min path, closest behavior, rank
 ##   data/issp_networks_by_country_<mode>.rds       list of fitted networks (28 + POOLED)
 ##   output/issp/issp_networks_<mode>.pdf           one network plot per country
+##   data/issp_pooled_belief_network.rds            pooled network, belief nodes only
 
 library(bootnet)
 library(qgraph)
@@ -42,12 +44,20 @@ NCORES <- max(1, min(8, detectCores() - 1))   # >8 oversubscribes and thrashes h
 ## ---------------------------------------------------------------------------
 ## Node builders
 ## ---------------------------------------------------------------------------
-belief_nodes <- c("envcom", "worldview", "threat", "nature", "left_right")
+belief_nodes <- c("envcom", "worldview", "threat", "nature", "left_right",
+                  "market", "redistribute")
 
+## market / redistribute: Q2a (v3) "Private enterprise is the best way to solve
+## [COUNTRY]'s economic problems" and Q2b (v4) "It is the responsibility of the
+## government to reduce the differences in income ...". Single-item nodes, not a
+## scale (pooled r = -.10; -.47 to .17 across countries). Recoded 6 - x so
+## higher = more agreement.
 build_beliefs <- function(s) {
   b <- make_issp_scales(s, issp_scale_map_4)          # envcom worldview threat nature
   lr <- s$PARTY_LR; lr[!lr %in% 1:5] <- NA            # drop "other"(6)/"invalid"(96)
-  b$left_right <- lr
+  b$left_right   <- lr
+  b$market       <- 6 - s$v3
+  b$redistribute <- 6 - s$v4
   b
 }
 
@@ -230,6 +240,15 @@ cat("Expected public = group_member/petition/donate/protest; private = recycle/a
 ## ---------------------------------------------------------------------------
 issp_results <- lapply(MODES, run_mode)
 names(issp_results) <- MODES
+
+## ---------------------------------------------------------------------------
+## Pooled belief-only network (no behavior nodes), for the manuscript figure
+## that sets it beside the pooled belief + behavior network. Same settings as
+## the country networks; reference only (no country structure, no weights).
+## ---------------------------------------------------------------------------
+pooled_beliefs <- build_beliefs(d)[, belief_nodes]
+pooled_belief_net <- fit_one(pooled_beliefs[, keep_nodes(pooled_beliefs), drop = FALSE])
+saveRDS(pooled_belief_net, "data/issp_pooled_belief_network.rds")
 
 cat(sprintf("\nWrote data/issp_belief_behavior_{paths,summary}_{%s}.csv etc.\n",
             paste(MODES, collapse = ",")))

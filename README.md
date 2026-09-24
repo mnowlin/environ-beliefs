@@ -4,32 +4,27 @@ Manuscript and reproducible analysis examining how environmental beliefs are
 connected in belief-system networks and which beliefs sit on the shortest
 paths to self-reported pro-environmental behavior.
 
-The paper has two studies:
+The paper uses international data from the **ISSP 2020 Environment** module
+(ZA7650; 44,100 respondents, 28 countries).
 
-- **Study 1** — US data collected in July 2017 (*N* = 1,000 adults), fielded
-  online through Survey Sampling Inc. Belief items are political ideology,
-  environmentalist identity, the Connectedness to Nature Scale (CNS), and the
-  New Ecological Paradigm (NEP). Behavior is a 13-item pro-environmental
-  behavior scale (2000 Gallup Earth Day Poll), split into public and private
-  sub-scales. The 2017 survey also carried cultural-cognition batteries
-  (egalitarian–hierarchical, communitarian–individualist), but those were a
-  split-ballot shown to only 501 of the 1,000 respondents, so cultural
-  cognition is **not** used — dropping it keeps the network at the full *N* =
-  1,000.
-- **Study 2** — International data from ISSP 2020 Environment (ZA7650;
-  44,100 respondents, 28 countries). Data are imported and there is a
-  Study 1 ↔ ISSP question crosswalk (`data/issp-2017-crosswalk.md`); the
-  Study 2 network analysis is not yet written.
+- **Belief nodes (7):** four EGA-derived scales, oriented so higher = more
+  pro-environmental — environmental commitment (`envcom`), ecological
+  worldview (`worldview`), perceived threat (`threat`), nature affinity
+  (`nature`) — plus three single items: left–right ideology (`left_right`,
+  vote-based `PARTY_LR`), support for private enterprise (`market`, Q2a) and
+  support for government redistribution (`redistribute`, Q2b).
+- **Behavior nodes (2):** public (group membership, petition, donation,
+  protest) and private (recycling, avoiding harmful products).
+- **Method:** one regularized partial-correlation network (EBICglasso via
+  `bootnet`/`qgraph`) per country plus a pooled network, and weighted shortest
+  paths (Dijkstra on 1/|edge weight|) from each belief to each behavior, with
+  1,000-resample nonparametric bootstraps per country.
 
-The Study 1 network has five belief nodes — political ideology,
-environmentalist identity, environmental-movement identity, and the NEP and
-CNS **scale scores** (item means, oriented so higher = more
-pro-environmental) — plus public and private behavior nodes. It is a
-regularized partial-correlation network (EBICglasso via `bootnet`/`qgraph`)
-with nonparametric-bootstrap node centrality (betweenness, closeness,
-strength) and weighted shortest paths (Dijkstra on 1/|edge weight|) from each
-belief to the two behavior nodes. Appendix A (EGA / UVA, `EGAnet`) documents
-why the NEP and CNS items are collapsed to single scales.
+An earlier version also had a **Study 1** (US, July 2017, *N* = 1,000;
+NEP, CNS, identity, ideology; 13-item Gallup behavior scale). It has been
+dropped from the manuscript; its code (`scripts/analysis.R`,
+`scripts/Data cleaning script.R`) and supplement section S1 remain in the
+repo.
 
 ## Layout
 
@@ -42,13 +37,14 @@ _output/                              Rendered HTML/PDF/DOCX (tracked in git)
 custom-reference-doc.docx             Word reference template used for the DOCX output
 LOG.md                                Running session log (newest entry first)
 scripts/
-  analysis.R                          Sourced by the qmd: builds NEP/CNS scale scores,
-                                        estimates the belief and belief+behavior networks,
-                                        centrality + bootstrap, belief->behavior shortest
-                                        paths, and the Appendix A EGA/UVA objects
+  analysis.R                          (Former Study 1) sourced by the qmd; the manuscript now
+                                        only uses net_fig_cols from it. Also the S1 EGA/UVA objects
   analysis-issp-scales.R             Study 2: EGA scale development (see data/issp-scales.md)
-  analysis-issp.R                     Study 2: per-country ISSP belief->behavior networks (scale nodes,
-                                        public/private behavior; bootstrap CIs). MODES adds the 6-item variant
+  analysis-issp.R                     Study 2: per-country + pooled ISSP belief->behavior networks
+                                        (7 belief nodes, public/private behavior; bootstrap CIs),
+                                        pooled belief-only network. MODES adds the 6-item variant
+  robustness-envcom.R                Study 2 robustness: envcom without its willingness-to-pay /
+                                        personal-norm items (lean) and with them as a separate node (split)
   _spl-bootstrap.R                   Shared: boot_spl() bootstrap of belief->behavior shortest paths
   _issp-scale-defs.R                 Shared: ISSP scale maps + make_issp_scales() helper
   export-cited-refs.R                 Pre-render step: trims the master .bib to cited keys
@@ -66,6 +62,12 @@ data/                                 Survey data + bootstrap objects (NOT in gi
   issp_environment_2020_codebook.csv  variable -> question-label map for the ISSP file
   ISSP_ZA7650_questionnaire.pdf       ISSP 2020 source questionnaire
   issp-2017-crosswalk.md             Study 1 <-> ISSP item map for beliefs and behaviors
+  issp_belief_behavior_*_pubpriv.csv  Study 2 shortest paths / per-country summaries (+ bootstrap)
+  issp_networks_by_country_pubpriv.rds  Fitted country + POOLED networks
+  issp_pooled_belief_network.rds      Pooled belief-only network
+  issp_spl_boot_pubpriv.rds           Per-country bootstrap cache (delete to rebuild after node changes)
+  issp_robust_envcom_*.csv            Output of scripts/robustness-envcom.R
+  archive-5belief/                    Study 2 outputs before the market/redistribute nodes were added
 output/                               Figure PNGs written by analysis.R (centrality plots)
 literature/                           Background literature (NOT in git -- local only)
 ```
@@ -85,6 +87,11 @@ Requires R with: `tidyverse`, `bootnet`, `qgraph`, `egg`, `car`, `ppcor`,
 - **Study 2:** `Rscript scripts/analysis-issp-scales.R` develops the belief
   scales (EGA), then `Rscript scripts/analysis-issp.R` builds the per-country
   belief→behavior networks and `data/issp_belief_behavior_*.csv`.
+  `Rscript scripts/robustness-envcom.R` runs the environmental-commitment
+  robustness variants.
+- **renv on OneDrive:** set `RENV_CONFIG_CACHE_SYMLINKS=FALSE` (e.g. in
+  `~/.Renviron`) before `renv::restore()`. OneDrive turns renv's cache
+  symlinks into plain-text stubs, which leaves packages unloadable.
 
 The node-centrality bootstraps (`ENV*network_data_for_replication.RData`) and
 the bootEGA cache (`ega_boot_study1.RData`) are written to `data/` on first

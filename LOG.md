@@ -16,7 +16,10 @@ self-reported pro-environmental behavior. Two studies:
   online. Beliefs: political ideology, environmentalist identity, CNS, NEP,
   and cultural-cognition batteries. Behavior: 13-item pro-environmental
   behavior scale (2000 Gallup Earth Day Poll), split public/private.
-- **Study 2** — International ISSP data collected 2020. Not yet incorporated.
+- **Study 2** — International ISSP data collected 2020.
+
+> **As of Session 14 the paper uses Study 2 (ISSP 2020) only.** Study 1 is
+> dropped from the manuscript; its code and data remain in the repo.
 
 **Key files:**
 - `environ-beliefs.qmd` — main manuscript (renders to HTML, PDF, DOCX)
@@ -383,6 +386,73 @@ self-reported pro-environmental behavior. Two studies:
   a belief/behavior binary factor and exports `net_fig_cols`; all three
   network chunks use it. Dropped the old Ideology/Identity/Orientation
   grouping and `theme = "gray"`.
+
+### Session 14 — 2026-09-24 (Drop Study 1; economic belief nodes; envcom robustness; new figures and prose)
+
+- **Decision: the paper is now Study 2 (ISSP 2020) only.** Assessed Study 1
+  vs Study 2 consistency first: they agree coarsely (a commitment/identity
+  node closest, ideology far) but not in detail (NEP far in Study 1 vs
+  worldview 2nd in Study 2; CNS close to private in Study 1 vs `nature`
+  mid-pack; US in Study 2 does not reproduce Study 1). Author dropped
+  Study 1 for length (8,500-word limit) and to make room for a cross-country
+  discussion. The Study 1 prose/figures were removed from
+  `environ-beliefs.qmd` by the author; `scripts/analysis.R` is still sourced
+  (only `net_fig_cols` is needed now -- candidate for trimming).
+- **Robustness: is `envcom`'s lead driven by intention items?** New
+  `scripts/robustness-envcom.R` (pubpriv only; outputs
+  `data/issp_robust_envcom_{summary,paths}_{lean,split}.csv`,
+  `data/issp_spl_boot_lean.rds`):
+  - `lean` -- envcom = v15 + v36 only (alpha .41), v26-v28/v31 dropped,
+    bootstrapped: envcom closest in 9/28 (mean rank 2.36); worldview 8,
+    nature 7 -- three-way tie on mean rank (2.25 / 2.36 / 2.50).
+  - `split` -- lean envcom + `willing` node (v26-v28, v31; alpha .78):
+    `willing` closest in 15/28 (mean rank 2.04); lean envcom 3.21.
+  - Conclusion: most of envcom's lead comes from its willingness-to-pay /
+    "do what is right" items. **Not yet reflected in the manuscript** --
+    open decision whether to report `willing` as its own node.
+- **Two economic belief nodes added to Study 2** (`scripts/analysis-issp.R`):
+  `market` = 6 - v3 (private enterprise best way to solve economic problems),
+  `redistribute` = 6 - v4 (government should reduce income differences);
+  higher = more agreement. Single-item nodes, not a scale (pooled r = -.10;
+  -.47 to .17 by country). Re-ran all 28 countries + bootstrap. Old 5-belief
+  outputs archived to `data/archive-5belief/`.
+  - Result: rank-1 belief unchanged in every country; envcom 24/28 (mean
+    rank 1.29), bootstrap-supported in 27/28. `market` (5.18) and
+    `redistribute` (5.79) are the most peripheral beliefs; direct edges to
+    behavior near zero. AU `left_right` support fell to .35 (now a
+    three-way tie); US `nature` rose to .60.
+- `analysis-issp.R` also saves the pooled belief-only network
+  (`data/issp_pooled_belief_network.rds`); re-run with cached bootstraps
+  reproduced the summary CSV byte-for-byte.
+- **Manuscript (`environ-beliefs.qmd`)**:
+  - Restored the Study 2 setup chunk (deleted along with Study 1) and added
+    inline helpers (`ew`, `pool_spl`, `ctry_pc`, `mean_spl`, `mean_rank`,
+    `n_no_lr`) so all prose numbers are computed.
+  - New `@fig-issp-pooled` -- pooled network without / with behavior nodes,
+    shared node positions (`rescale = FALSE`) and edge-width scale.
+  - New `@fig-issp-spl` -- Brandt et al. (2019) Fig. 3 style: per-country
+    shortest paths by belief, faceted public/private, mean +/- 95% CI boxes.
+    TW `redistribute` is disconnected (Inf) and omitted.
+  - Labels for the new nodes in Table/Figure code and captions.
+  - Drafted Study-1-free Data and Measures and Results prose (political /
+    economic beliefs paragraph, method paragraph, descriptions of every
+    figure and the table, revised closing paragraph). Citations for
+    glasso/EBIC, Dijkstra, and Brandt et al. still to add.
+- **Supplement**: added a paragraph in S2 explaining the survey-battery
+  grouping (TEFI -21.0 vs -31.4 for Louvain) and where the EGA solution
+  departs from the questionnaire sections.
+- **renv library repair**: OneDrive had converted renv's cache symlinks into
+  text stub files (213 packages unloadable). Added
+  `RENV_CONFIG_CACHE_SYMLINKS=FALSE` to `~/.Renviron`, removed the stubs,
+  `renv::restore()` (copies from cache), and replaced the remaining 36
+  symlinks with copies. `renv::status()` synchronized; `analysis.R` runs.
+- Set `core.fileMode=false` in this repo's git config (OneDrive flips the
+  executable bit, producing mode-only diffs).
+- Not committed / left for the author: files OneDrive restored after earlier
+  deletions (`manuscript/`, `output/COMcentralPlots.png`, `output/centP.png`,
+  `output/issp/issp_networks_by_country.pdf`, `scripts/set-up.r`,
+  `tmp-pdfcrop-14777.*`) and the OneDrive duplicate
+  `_output/environ-beliefs-supplement_files 2/`.
 
 ---
 
