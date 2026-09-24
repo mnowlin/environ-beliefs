@@ -454,6 +454,54 @@ self-reported pro-environmental behavior. Two studies:
   `tmp-pdfcrop-14777.*`) and the OneDrive duplicate
   `_output/environ-beliefs-supplement_files 2/`.
 
+### Session 15 — 2026-09-24 (Split environmental commitment into three nodes; measures table)
+
+- **Decision (option 1 from the Session 14 robustness check): the EGA
+  `envcom` community is no longer one node.** New `issp_node_map` in
+  `scripts/_issp-scale-defs.R`, used by `scripts/analysis-issp.R`:
+  - `willing` = v26, v27, v28, v31 (pay higher prices / taxes, cut standard
+    of living, "do what is right even when it costs more"); alpha .78.
+  - `concern` = v15 (single item), `impact` = v36 "environmental problems
+    have a direct effect on my everyday life" (single item). First run had
+    them as one 2-item scale (alpha .41); the author split them because they
+    measure different things.
+  - worldview / threat / nature unchanged. **9 belief nodes** in total.
+  - Intermediate outputs archived: `data/archive-7belief/` (envcom + two
+    economic nodes), `data/archive-8belief/` (concern+impact as one scale).
+  - `analysis-issp.R` now saves `data/issp_node_alpha.rds` (pooled alpha,
+    multi-item scales only).
+- **Results (9 nodes, 1,000 bootstraps/country):** mean rank `willing`
+  2.25 (closest in 16/28), `concern` 2.61 (8), `nature` 3.50 (4),
+  `worldview` 3.50 (2), `threat` 5.75, `impact` 5.93, `left_right` 5.94,
+  `market` 6.89, `redistribute` 7.36. Rank-1 belief bootstrap-supported in
+  25/28. Exact ties in Denmark (concern/willing) and Finland
+  (willing/worldview). Across countries the willing, concern, worldview, and
+  nature shortest-path CIs overlap -- a closer group rather than a clean
+  ordering. Pooled: willing -> public shortest (4.78), nature -> private
+  (5.38); concern is far in the pooled network (~11) despite ranking 2nd
+  across countries. `impact` sits with `threat` and has ~no direct edge to
+  behavior. AU is now `concern` (.55); ideology is closest nowhere.
+- **Manuscript (`environ-beliefs.qmd`)**:
+  - Measures prose describes the three-way split and why.
+  - New `@tbl-measures` (now Table 1): belief label, ISSP question wording
+    (from `data/ISSP_ZA7650_questionnaire.pdf`, question numbers stripped at
+    build time), pooled alpha for scales; (R) marks reverse-coded items.
+  - All Results paragraphs rewritten for the 9-node results; closing
+    paragraph contrasts general concern with perceived personal impact.
+  - Setup chunk: `n_willing`, tie detection (`tie_iso`, `tie_names`, used in
+    the text and in a `!expr` table caption so ties are named), `n_robust`
+    counted by country, `node_alpha` / `alpha_of()`.
+  - Labels/captions for `concern`, `impact`, `willing` in all figures and
+    tables; "Study 2" removed from captions.
+- **Supplement**: S2 paragraph explains the split of the EGA commitment
+  community; S3 uses readable belief labels, "coin flip" benchmark = one
+  ninth, notes how ties are shown; removed the stale six-item-variant
+  sentence (not re-run with the current nodes). S1 (Study 1 NEP/CNS) is
+  still in the supplement -- author to decide whether to drop it.
+- `scripts/robustness-envcom.R` is kept as the record of the check that
+  motivated the split (its `lean`/`split` variants predate the economic
+  nodes).
+
 ---
 
 ## Analysis Architecture (as of Session 1)

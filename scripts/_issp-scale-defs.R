@@ -31,6 +31,23 @@ issp_scale_map_4 <- issp_scale_map_5
 issp_scale_map_4$worldview <- c(issp_scale_map_5$worldview, "v22", "v25")
 issp_scale_map_4$limits <- NULL
 
+## Network nodes used in the manuscript (analysis-issp.R): the 4-scale map with
+## the EGA envcom community split in two. Its willingness-to-sacrifice items
+## (v26-v28 pay prices / taxes / cut standard of living; v31 "I do what is
+## right even when it costs more") read as behavioral intentions and carried
+## envcom's lead over the other beliefs (scripts/robustness-envcom.R), so they
+## form their own node. The two remaining items are single-item nodes -- they
+## measure different things (alpha = .41): concern about environmental issues
+## (v15) and perceived personal impact, "environmental problems have a direct
+## effect on my everyday life" (v36).
+issp_node_map <- list(
+  concern   = "v15",
+  impact    = "v36",
+  willing   = c("v26", "v27", "v28", "v31"),
+  worldview = issp_scale_map_4$worldview,
+  threat    = issp_scale_map_4$threat,
+  nature    = issp_scale_map_4$nature)
+
 ## Unit-weighted item means of the oriented items (higher = pro-environmental).
 ## A respondent with some items missing is scored from the rest; all-missing -> NA.
 make_issp_scales <- function(df, map = issp_scale_map_4) {

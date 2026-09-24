@@ -7,12 +7,16 @@ paths to self-reported pro-environmental behavior.
 The paper uses international data from the **ISSP 2020 Environment** module
 (ZA7650; 44,100 respondents, 28 countries).
 
-- **Belief nodes (7):** four EGA-derived scales, oriented so higher = more
-  pro-environmental — environmental commitment (`envcom`), ecological
-  worldview (`worldview`), perceived threat (`threat`), nature affinity
-  (`nature`) — plus three single items: left–right ideology (`left_right`,
-  vote-based `PARTY_LR`), support for private enterprise (`market`, Q2a) and
-  support for government redistribution (`redistribute`, Q2b).
+- **Belief nodes (9):** built from the EGA scale communities, oriented so
+  higher = more pro-environmental — willingness to sacrifice (`willing`,
+  4 items), ecological worldview (`worldview`), perceived threat (`threat`),
+  nature affinity (`nature`), and two single items split off the EGA
+  commitment community, environmental concern (`concern`, Q6) and personal
+  impact (`impact`, Q12g) — plus three single items: left–right ideology
+  (`left_right`, vote-based `PARTY_LR`), support for private enterprise
+  (`market`, Q2a) and support for government redistribution
+  (`redistribute`, Q2b). Node definitions: `issp_node_map` in
+  `scripts/_issp-scale-defs.R`.
 - **Behavior nodes (2):** public (group membership, petition, donation,
   protest) and private (recycling, avoiding harmful products).
 - **Method:** one regularized partial-correlation network (EBICglasso via
@@ -41,12 +45,13 @@ scripts/
                                         only uses net_fig_cols from it. Also the S1 EGA/UVA objects
   analysis-issp-scales.R             Study 2: EGA scale development (see data/issp-scales.md)
   analysis-issp.R                     Study 2: per-country + pooled ISSP belief->behavior networks
-                                        (7 belief nodes, public/private behavior; bootstrap CIs),
+                                        (9 belief nodes, public/private behavior; bootstrap CIs),
                                         pooled belief-only network. MODES adds the 6-item variant
   robustness-envcom.R                Study 2 robustness: envcom without its willingness-to-pay /
                                         personal-norm items (lean) and with them as a separate node (split)
   _spl-bootstrap.R                   Shared: boot_spl() bootstrap of belief->behavior shortest paths
-  _issp-scale-defs.R                 Shared: ISSP scale maps + make_issp_scales() helper
+  _issp-scale-defs.R                 Shared: ISSP scale maps (EGA scales; issp_node_map = network
+                                        nodes) + make_issp_scales() helper
   export-cited-refs.R                 Pre-render step: trims the master .bib to cited keys
   Data cleaning script.R              Builds data/cleandat.csv from data/apsa17.csv
   convert-issp.R                      Converts the ISSP 2020 SPSS file to data/issp_environment_2020.csv
@@ -67,7 +72,9 @@ data/                                 Survey data + bootstrap objects (NOT in gi
   issp_pooled_belief_network.rds      Pooled belief-only network
   issp_spl_boot_pubpriv.rds           Per-country bootstrap cache (delete to rebuild after node changes)
   issp_robust_envcom_*.csv            Output of scripts/robustness-envcom.R
-  archive-5belief/                    Study 2 outputs before the market/redistribute nodes were added
+  issp_node_alpha.rds                 Pooled alpha of each multi-item node scale
+  archive-5belief/, archive-7belief/, archive-8belief/
+                                      Study 2 outputs from earlier node sets (see LOG Sessions 14-15)
 output/                               Figure PNGs written by analysis.R (centrality plots)
 literature/                           Background literature (NOT in git -- local only)
 ```

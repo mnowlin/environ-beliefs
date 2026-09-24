@@ -2,10 +2,12 @@
 ## Study 2: per-country belief -> behavior network analysis, ISSP 2020 Environment.
 ##
 ## One EBICglasso network per country (28) plus a pooled reference. Belief nodes
-## are the four EGA-derived SCALE scores (scripts/analysis-issp-scales.R;
-## data/issp-scales.md) plus PARTY_LR as a single ideology node -- mirroring the
-## Study 1 move to NEP/CNS scale nodes in scripts/analysis.R -- and two
-## single-item economic-belief nodes, market (v3) and redistribute (v4).
+## are the four EGA-derived scales (scripts/analysis-issp-scales.R;
+## data/issp-scales.md) with envcom split into a willing scale and two
+## single-item nodes, concern and impact (issp_node_map in _issp-scale-defs.R),
+## plus PARTY_LR as a single ideology
+## node and two single-item economic-belief nodes, market (v3) and
+## redistribute (v4).
 ##
 ## Behavior mode(s) -- set MODES below (outputs suffixed _items / _pubpriv):
 ##   pubpriv -- Study 1-style indices (the specification reported in the paper):
@@ -27,6 +29,7 @@
 ##   data/issp_networks_by_country_<mode>.rds       list of fitted networks (28 + POOLED)
 ##   output/issp/issp_networks_<mode>.pdf           one network plot per country
 ##   data/issp_pooled_belief_network.rds            pooled network, belief nodes only
+##   data/issp_node_alpha.rds                       pooled alpha of each node scale
 
 library(bootnet)
 library(qgraph)
@@ -44,8 +47,8 @@ NCORES <- max(1, min(8, detectCores() - 1))   # >8 oversubscribes and thrashes h
 ## ---------------------------------------------------------------------------
 ## Node builders
 ## ---------------------------------------------------------------------------
-belief_nodes <- c("envcom", "worldview", "threat", "nature", "left_right",
-                  "market", "redistribute")
+belief_nodes <- c("concern", "impact", "willing", "worldview", "threat", "nature",
+                  "left_right", "market", "redistribute")
 
 ## market / redistribute: Q2a (v3) "Private enterprise is the best way to solve
 ## [COUNTRY]'s economic problems" and Q2b (v4) "It is the responsibility of the
@@ -53,7 +56,7 @@ belief_nodes <- c("envcom", "worldview", "threat", "nature", "left_right",
 ## scale (pooled r = -.10; -.47 to .17 across countries). Recoded 6 - x so
 ## higher = more agreement.
 build_beliefs <- function(s) {
-  b <- make_issp_scales(s, issp_scale_map_4)          # envcom worldview threat nature
+  b <- make_issp_scales(s, issp_node_map)   # concern impact willing worldview threat nature
   lr <- s$PARTY_LR; lr[!lr %in% 1:5] <- NA            # drop "other"(6)/"invalid"(96)
   b$left_right   <- lr
   b$market       <- 6 - s$v3
@@ -249,6 +252,16 @@ names(issp_results) <- MODES
 pooled_beliefs <- build_beliefs(d)[, belief_nodes]
 pooled_belief_net <- fit_one(pooled_beliefs[, keep_nodes(pooled_beliefs), drop = FALSE])
 saveRDS(pooled_belief_net, "data/issp_pooled_belief_network.rds")
+
+## Pooled Cronbach's alpha for each multi-item node scale (manuscript measures)
+cronbach <- function(x) {
+  x <- stats::na.omit(x); k <- ncol(x)
+  k / (k - 1) * (1 - sum(apply(x, 2, stats::var)) / stats::var(rowSums(x)))
+}
+multi_item <- Filter(function(items) length(items) > 1, issp_node_map)
+node_alpha <- vapply(multi_item, function(items) cronbach(orient_issp(d)[items]), numeric(1))
+saveRDS(node_alpha, "data/issp_node_alpha.rds")
+print(round(node_alpha, 2))
 
 cat(sprintf("\nWrote data/issp_belief_behavior_{paths,summary}_{%s}.csv etc.\n",
             paste(MODES, collapse = ",")))
